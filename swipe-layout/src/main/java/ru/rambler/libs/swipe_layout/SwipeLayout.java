@@ -423,16 +423,21 @@ public class SwipeLayout extends ViewGroup {
             }
 
             LayoutParams lp = getLayoutParams(leftView);
+
+            int max;
             switch (lp.clamp) {
                 case LayoutParams.CLAMP_PARENT:
-                    return Math.min(left, getWidth() + child.getLeft() - leftView.getRight());
-
+                    max = getWidth() + child.getLeft() - leftView.getRight();
+                    break;
                 case LayoutParams.CLAMP_SELF:
-                    return Math.min(left, child.getLeft() - leftView.getLeft());
-
+                    max = child.getLeft() - leftView.getLeft();
+                    break;
                 default:
-                    return Math.min(left, child.getLeft() - leftView.getRight() + lp.clamp);
+                    max = child.getLeft() - leftView.getRight() + lp.clamp;
+                    break;
             }
+
+            return Math.min(left, max);
         }
 
         private int clampMoveLeft(View child, int left) {
@@ -441,16 +446,22 @@ public class SwipeLayout extends ViewGroup {
             }
 
             LayoutParams lp = getLayoutParams(rightView);
+
+
+            int min;
             switch (lp.clamp) {
                 case LayoutParams.CLAMP_PARENT:
-                    return Math.max(child.getLeft() - rightView.getLeft(), left);
-
+                    min = child.getLeft() - rightView.getLeft();
+                    break;
                 case LayoutParams.CLAMP_SELF:
-                    return Math.max(left, getWidth() - rightView.getLeft() + child.getLeft() - rightView.getWidth());
-
+                    min = getWidth() - rightView.getLeft() + child.getLeft() - rightView.getWidth();
+                    break;
                 default:
-                    return Math.max(left, getWidth() - rightView.getLeft() + child.getLeft() - lp.clamp);
+                    min = getWidth() - rightView.getLeft() + child.getLeft() - lp.clamp;
+                    break;
             }
+
+            return Math.max(left, min);
         }
 
         private boolean onMoveRightReleased(View child, int dx, float xvel) {
@@ -572,6 +583,46 @@ public class SwipeLayout extends ViewGroup {
             child.offsetLeftAndRight(dx);
             invalidate(child.getLeft(), child.getTop(), child.getRight(), child.getBottom());
         }
+        calculateLeftSwipeProgress();
+        calculateRightSwipeProgress();
+    }
+
+    private void calculateLeftSwipeProgress() {
+        if (rightView == null || swipeListener == null) return;
+        swipeListener.onSwipeProgress(
+                SwipeLayout.this,
+                false,
+                rightView.getWidth(),
+                Math.abs(Math.min(0, centerView.getLeft()))
+        );
+    }
+
+    private void calculateRightSwipeProgress() {
+        if (leftView == null || swipeListener == null) return;
+
+        LayoutParams lp = getLayoutParams(leftView);
+
+        int max = centerView.getLeft();
+        switch (lp.clamp) {
+            case LayoutParams.CLAMP_PARENT:
+                max += getWidth() + getLeft() - leftView.getRight();
+                break;
+            case LayoutParams.CLAMP_SELF:
+                max += getLeft() - leftView.getLeft();
+                break;
+            default:
+                max += getLeft() - leftView.getRight() + lp.clamp;
+                break;
+        }
+
+        int current = Math.min(centerView.getLeft(), max);
+
+        swipeListener.onSwipeProgress(
+                SwipeLayout.this,
+                true,
+                max,
+                Math.max(0, current)
+        );
     }
 
     private void hackParents() {
@@ -776,5 +827,7 @@ public class SwipeLayout extends ViewGroup {
         void onLeftStickyEdge(SwipeLayout swipeLayout, boolean moveToRight);
 
         void onRightStickyEdge(SwipeLayout swipeLayout, boolean moveToRight);
+
+        void onSwipeProgress(SwipeLayout swipeLayout, boolean moveToRight, int max, int current);
     }
 }

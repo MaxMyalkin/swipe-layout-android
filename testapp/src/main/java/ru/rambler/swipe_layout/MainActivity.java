@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -95,6 +96,15 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onRightStickyEdge(SwipeLayout swipeLayout, boolean moveToRight) {
+                }
+
+                @Override
+                public void onSwipeProgress(SwipeLayout swipeLayout, boolean moveToRight, int max, int current) {
+                    if(moveToRight) {
+                        Log.d(MainActivity.class.getName(), String.format("onSwipeProgress|right|%s/%s", current, max));
+                    } else {
+                        Log.d(MainActivity.class.getName(), String.format("onSwipeProgress|left|%s/%s", current, max));
+                    }
                 }
             });
 
